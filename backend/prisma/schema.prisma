@@ -1,0 +1,84 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id        String     @id @default(uuid())
+  username  String     @unique
+  password  String
+  concursos Concurso[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}
+
+model Concurso {
+  id             String           @id @default(uuid())
+  userId         String
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  nome           String
+  orgao          String
+  dataProva      DateTime
+  dataResultado  DateTime?
+  materias       Materia[]
+  simulados      Simulado[]
+  cronograma     CronogramaItem[]
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+}
+
+model Materia {
+  id         String         @id @default(uuid())
+  concursoId String
+  concurso   Concurso       @relation(fields: [concursoId], references: [id], onDelete: Cascade)
+  nome       String
+  topicos    TopicoEstudo[]
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+}
+
+model TopicoEstudo {
+  id        String   @id @default(uuid())
+  materiaId String
+  materia   Materia  @relation(fields: [materiaId], references: [id], onDelete: Cascade)
+  titulo    String
+  concluido Boolean  @default(false)
+  ordem     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Simulado {
+  id              String   @id @default(uuid())
+  concursoId      String
+  concurso        Concurso @relation(fields: [concursoId], references: [id], onDelete: Cascade)
+  nome            String
+  ano             Int
+  dataRealizacao  DateTime
+  gabaritoOficial String   // JSON serializado: {"1": "A", "2": "B", ...}
+  gabaritoAluno   String   // Texto puro original digitado pelo aluno
+  totalAcertos    Int      @default(0)
+  totalErros      Int      @default(0)
+  totalQuestoes   Int      @default(0)
+  notaPercentual  Float    @default(0.0)
+  detalhesJson    String?  // JSON com correção questão por questão
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model CronogramaItem {
+  id         String   @id @default(uuid())
+  concursoId String
+  concurso   Concurso @relation(fields: [concursoId], references: [id], onDelete: Cascade)
+  diaSemana  Int      // 0 (Segunda) a 6 (Domingo)
+  linhaIndex Int
+  conteudo   String
+  corFundo   String   @default("#ffffff")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+

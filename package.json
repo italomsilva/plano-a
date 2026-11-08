@@ -1,0 +1,12 @@
+{
+  "name": "plano-a",
+  "version": "1.0.0",
+  "description": "Plano A - Sistema de Organização de Estudos para Concursos Públicos (Hermes Agent)",
+  "scripts": {
+    "dev:backend": "cd backend && npm run start:dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "prisma:push": "cd backend && npx prisma db push",
+    "prisma:studio": "cd backend && npx prisma studio"
+  }
+}
+
