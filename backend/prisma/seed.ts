@@ -152,7 +152,7 @@ async function main() {
         totalErros: 2,
         totalQuestoes: 10,
         notaPercentual: 80.0,
-        detalhesJson: JSON.stringify(relatorio),
+        detalhes: JSON.stringify(relatorio),
       },
     });
     console.log(`📝 Simulado modelo criado.`);

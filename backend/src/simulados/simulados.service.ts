@@ -69,7 +69,7 @@ export class SimuladosService {
     return simulados.map((s) => ({
       ...s,
       gabaritoOficial: this.safeParseJson(s.gabaritoOficial),
-      detalhes: s.detalhesJson ? this.safeParseJson(s.detalhesJson) : null,
+      detalhes: s.detalhes ? this.safeParseJson(s.detalhes) : null,
     }));
   }
 
@@ -90,9 +90,7 @@ export class SimuladosService {
     return {
       ...simulado,
       gabaritoOficial: this.safeParseJson(simulado.gabaritoOficial),
-      detalhes: simulado.detalhesJson
-        ? this.safeParseJson(simulado.detalhesJson)
-        : null,
+      detalhes: simulado.detalhes ? this.safeParseJson(simulado.detalhes) : null,
     };
   }
 
@@ -104,16 +102,7 @@ export class SimuladosService {
     gabaritoAlunoTexto: string,
   ): RelatorioCorrecao {
     // Normalizar Gabarito Oficial
-    let oficialMap: Record<string, string> = {};
-    if (typeof gabaritoOficialInput === 'string') {
-      try {
-        oficialMap = JSON.parse(gabaritoOficialInput);
-      } catch {
-        oficialMap = this.visionOcrService.parseTextToGabarito(gabaritoOficialInput);
-      }
-    } else if (typeof gabaritoOficialInput === 'object' && gabaritoOficialInput !== null) {
-      oficialMap = gabaritoOficialInput;
-    }
+    const oficialMap = this.normalizeOficialGabarito(gabaritoOficialInput);
 
     // Normalizar Gabarito do Aluno
     const alunoMap = this.visionOcrService.parseTextToGabarito(gabaritoAlunoTexto);
@@ -213,10 +202,7 @@ export class SimuladosService {
 
     const relatorio = this.calcularCorrecao(dto.gabaritoOficial, dto.gabaritoAluno);
 
-    const gabaritoOficialStr =
-      typeof dto.gabaritoOficial === 'string'
-        ? dto.gabaritoOficial
-        : JSON.stringify(dto.gabaritoOficial);
+    const gabaritoOficialMap = this.normalizeOficialGabarito(dto.gabaritoOficial);
 
     const simulado = await this.prisma.simulado.create({
       data: {
@@ -224,19 +210,20 @@ export class SimuladosService {
         nome: dto.nome,
         ano: dto.ano,
         dataRealizacao: new Date(dto.dataRealizacao),
-        gabaritoOficial: gabaritoOficialStr,
+        gabaritoOficial: JSON.stringify(gabaritoOficialMap),
         gabaritoAluno: dto.gabaritoAluno,
         totalAcertos: relatorio.totalAcertos,
         totalErros: relatorio.totalErros,
         totalQuestoes: relatorio.totalQuestoes,
         notaPercentual: relatorio.notaPercentual,
-        detalhesJson: JSON.stringify(relatorio),
+        detalhes: JSON.stringify(relatorio),
       },
     });
 
     return {
       ...simulado,
-      gabaritoOficial: this.safeParseJson(simulado.gabaritoOficial),
+      gabaritoOficial: gabaritoOficialMap,
+      detalhes: relatorio,
       relatorio,
     };
   }
@@ -249,12 +236,32 @@ export class SimuladosService {
     });
   }
 
-  private safeParseJson(data: string) {
+  private safeParseJson(data: any) {
+    if (!data || typeof data !== 'string') return data;
     try {
       return JSON.parse(data);
     } catch {
       return data;
     }
+  }
+
+  /**
+   * Normaliza o gabarito oficial (string JSON, texto cru de OCR ou objeto) para um mapa.
+   */
+  private normalizeOficialGabarito(input: any): Record<string, string> {
+    if (typeof input === 'string') {
+      try {
+        return JSON.parse(input);
+      } catch {
+        return this.visionOcrService.parseTextToGabarito(input);
+      }
+    }
+
+    if (typeof input === 'object' && input !== null) {
+      return input;
+    }
+
+    return {};
   }
 }
 

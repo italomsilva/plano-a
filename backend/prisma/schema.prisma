@@ -59,13 +59,13 @@ model Simulado {
   nome            String
   ano             Int
   dataRealizacao  DateTime
-  gabaritoOficial String   // JSON serializado: {"1": "A", "2": "B", ...}
+  gabaritoOficial String   // Mapa oficial serializado como JSON: {"1": "A", "2": "B", ...}
   gabaritoAluno   String   // Texto puro original digitado pelo aluno
   totalAcertos    Int      @default(0)
   totalErros      Int      @default(0)
   totalQuestoes   Int      @default(0)
   notaPercentual  Float    @default(0.0)
-  detalhesJson    String?  // JSON com correção questão por questão
+  detalhes        String?  // Relatório com correção questão por questão serializado como JSON
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 }

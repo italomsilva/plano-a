@@ -4,7 +4,5 @@ dist/
 *.log
 .env
 .env.local
-backend/prisma/*.db
-backend/prisma/*.db-journal
 .DS_Store
 

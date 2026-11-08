@@ -8,7 +8,7 @@ Aplicação web full-stack de alto desempenho para planejamento, acompanhamento 
 
 ### Backend (NestJS + TypeScript)
 - **Framework:** NestJS modular com arquitetura SOLID (`AuthModule`, `ConcursosModule`, `MateriasModule`, `SimuladosModule`, `CronogramaModule`, `VisionOcrModule`).
-- **ORM & Banco de Dados:** Prisma ORM com SQLite (zero-config local, facilmente comutável para PostgreSQL via `DATABASE_URL`).
+- **ORM & Banco de Dados:** Prisma ORM com PostgreSQL (campos JSON nativos em JSONB).
 - **Autenticação:** Passport.js com JSON Web Token (JWT) e criptografia Bcrypt.
 - **Validação:** DTOs com `class-validator` e `class-transformer`.
 - **Motor de Visão / OCR:**
@@ -32,7 +32,6 @@ plano-a/
 ├── backend/
 │   ├── prisma/
 │   │   ├── schema.prisma         # Modelos User, Concurso, Materia, TopicoEstudo, Simulado, CronogramaItem
-│   │   └── dev.db                # Banco SQLite local
 │   ├── src/
 │   │   ├── auth/                 # Módulo 0: Autenticação simples (username/password + JWT)
 │   │   ├── concursos/            # Módulo 1: Gestão e estatísticas de concursos
@@ -76,24 +75,23 @@ plano-a/
 
 ## ⚡ Como Executar o Projeto
 
-### Pré-requisitos
-- Node.js 18+ (recomendado Node.js 20+)
-- npm ou pnpm
+### Método 1: Inicialização Rápida (1 Clique no Windows)
+- **Iniciar:** Dê dois cliques em `start.bat` (ou execute `.\start.ps1` no PowerShell).
+- **Parar:** Dê dois cliques em `stop.bat` (ou execute `.\stop.ps1` no PowerShell).
 
-### 1. Iniciar o Backend (NestJS)
+### Método 2: Manual via Terminal
+
+#### Iniciar o Backend (NestJS)
 ```bash
 cd backend
-npm install
-npx prisma db push
 npm run start:dev
 ```
 O servidor da API iniciará em: `http://localhost:3001/api`
 
-### 2. Iniciar o Frontend (Next.js)
+#### Iniciar o Frontend (Next.js)
 Em outro terminal:
 ```bash
 cd frontend
-npm install
 npm run dev
 ```
 A aplicação web estará acessível em: `http://localhost:3000`
@@ -106,7 +104,7 @@ No arquivo `backend/.env`:
 ```env
 PORT=3001
 JWT_SECRET=sua_chave_secreta_jwt
-DATABASE_URL="file:./dev.db"
+DATABASE_URL="postgresql://postgres:SUA_SENHA@localhost:5432/plano_a?schema=public"
 
 # Opcional: Adicione sua chave Google Gemini para reconhecimento ultra-preciso de fotos de gabarito:
 GEMINI_API_KEY=sua_chave_gemini_aqui
