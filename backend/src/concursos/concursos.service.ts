@@ -110,11 +110,24 @@ export class ConcursosService {
     const progressoEstudo =
       totalTopicos > 0 ? Math.round((topicosConcluidos / totalTopicos) * 100) : 0;
 
+    // Métricas de simulado também no detalhe (usadas pelo dashboard
+    // para as regras de exibição do card "Próximo Passo"):
+    const totalSimulados = concurso.simulados.length;
+    const mediaSimulados =
+      totalSimulados > 0
+        ? Math.round(
+            concurso.simulados.reduce((acc, s) => acc + s.notaPercentual, 0) /
+              totalSimulados,
+          )
+        : 0;
+
     return {
       ...concurso,
       totalTopicos,
       topicosConcluidos,
       progressoEstudo,
+      totalSimulados,
+      mediaSimulados,
     };
   }
 

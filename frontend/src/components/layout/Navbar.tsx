@@ -11,6 +11,7 @@ import {
   ChevronDown,
   Sparkles,
   PlusCircle,
+  Book,
 } from 'lucide-react';
 
 export function Navbar() {
@@ -31,14 +32,14 @@ export function Navbar() {
             className="flex items-center space-x-2.5 font-bold text-xl text-slate-900 dark:text-white group"
           >
             <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-emerald-400 flex items-center justify-center text-white shadow-md shadow-indigo-500/20 group-hover:scale-105 transition-transform">
-              <Sparkles size={20} />
+              <Book size={20} />
             </div>
             <div className="flex flex-col">
               <span className="leading-tight tracking-tight">
                 Plano <span className="text-indigo-600 dark:text-indigo-400">A</span>
               </span>
               <span className="text-[10px] text-slate-400 font-normal uppercase tracking-widest">
-                Hermes Agent
+                Aprovado ou Nada
               </span>
             </div>
           </Link>

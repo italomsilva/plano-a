@@ -38,6 +38,13 @@ export default function ConcursoOverviewPage() {
       })
     : null;
 
+  // Flags do card "Próximo Passo":
+  // - hasConteudo: já existe conteúdo cadastrado (tópicos do edital);
+  // - hasSimulados: já existem simulados cadastrados;
+  // ambos tolerantes a valores ausentes (undefined/null) vindos da API.
+  const hasConteudo = (concursoSelecionado.totalTopicos ?? 0) > 0;
+  const hasSimulados = (concursoSelecionado.totalSimulados ?? 0) > 0;
+
   return (
     <div className="space-y-6">
       {/* Cards de Métricas Principais */}
@@ -148,31 +155,57 @@ export default function ConcursoOverviewPage() {
         </div>
       </div>
 
-      {/* Atalhos Rápidos */}
-      <div className="p-6 bg-indigo-50/70 dark:bg-slate-900 rounded-3xl border border-indigo-100 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-indigo-600 text-white flex items-center justify-center flex-shrink-0 shadow-md">
-            <Sparkles size={20} />
+      {/* Card "Próximo Passo" */}
+      {/* Regras:
+          1. Conteúdo cadastrado + sem simulados → orienta criar um simulado;
+          2. Conteúdo + simulados → escondido completamente;
+          3. Sem conteúdo → orienta cadastrar o conteúdo (estado inicial). */}
+      {hasConteudo && hasSimulados ? null : (
+        <div className="p-6 bg-indigo-50/70 dark:bg-slate-900 rounded-3xl border border-indigo-100 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-indigo-600 text-white flex items-center justify-center flex-shrink-0 shadow-md">
+              <Sparkles size={20} />
+            </div>
+            <div>
+              <h4 className="text-sm font-bold text-slate-900 dark:text-white">
+                Próximo passo recomendado
+              </h4>
+              {hasConteudo ? (
+                <p className="text-xs text-slate-600 dark:text-slate-300 mt-0.5">
+                  Conteúdo cadastrado! O próximo passo é criar um simulado para
+                  testar seus conhecimentos.
+                </p>
+              ) : (
+                <p className="text-xs text-slate-600 dark:text-slate-300 mt-0.5">
+                  Cole o conteúdo do edital na aba{' '}
+                  <strong className="text-indigo-600 dark:text-indigo-400">
+                    Estudo
+                  </strong>{' '}
+                  ou suba a foto de um simulado para correção automática.
+                </p>
+              )}
+            </div>
           </div>
-          <div>
-            <h4 className="text-sm font-bold text-slate-900 dark:text-white">
-              Próximo passo recomendado
-            </h4>
-            <p className="text-xs text-slate-600 dark:text-slate-300 mt-0.5">
-              Cole o conteúdo do edital na aba <strong className="text-indigo-600 dark:text-indigo-400">Estudo</strong> ou suba a foto de um simulado para correção automática.
-            </p>
-          </div>
-        </div>
 
-        <div className="flex gap-2">
-          <Link
-            href={`/concurso/${id}/estudo`}
-            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-sm transition-all"
-          >
-            Acessar Edital & Checklist
-          </Link>
+          <div className="flex gap-2">
+            {hasConteudo ? (
+              <Link
+                href={`/concurso/${id}/simulados`}
+                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-sm transition-all"
+              >
+                Criar Simulado
+              </Link>
+            ) : (
+              <Link
+                href={`/concurso/${id}/estudo`}
+                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-sm transition-all"
+              >
+                Acessar Edital &amp; Checklist
+              </Link>
+            )}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

@@ -176,6 +176,20 @@ export function EditarGabaritoModal({
       title={`Editar Gabarito: ${simulado.nome}`}
       description="Adicione, corrija ou remova questões do gabarito oficial. A correção será recalculada automaticamente ao salvar."
       maxWidth="2xl"
+      footer={
+        <>
+          <Button type="button" variant="ghost" onClick={simClose} disabled={loading}>
+            Cancelar
+          </Button>
+          <Button
+            type="button"
+            isLoading={loading}
+            onClick={handleSalvar}
+          >
+            Salvar e Recalcular Correção
+          </Button>
+        </>
+      }
     >
       <div className="space-y-5">
         {error && (
@@ -288,19 +302,6 @@ export function EditarGabaritoModal({
             placeholder="1-A&#10;2-C&#10;3-B"
             className="w-full font-mono text-xs px-3.5 py-2.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500"
           />
-        </div>
-
-        <div className="flex justify-end gap-3 pt-3 border-t border-slate-100 dark:border-slate-800">
-          <Button type="button" variant="ghost" onClick={simClose} disabled={loading}>
-            Cancelar
-          </Button>
-          <Button
-            type="button"
-            isLoading={loading}
-            onClick={handleSalvar}
-          >
-            Salvar e Recalcular Correção
-          </Button>
         </div>
       </div>
     </Modal>
