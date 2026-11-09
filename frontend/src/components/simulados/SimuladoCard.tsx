@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Simulado } from '../../types';
+import { Simulado, RelatorioCorrecao } from '../../types';
 import { ResultadoSimuladoModal } from './ResultadoSimuladoModal';
+import { EditarGabaritoModal } from './EditarGabaritoModal';
 import {
   FileCheck2,
   Calendar,
@@ -10,16 +11,29 @@ import {
   CheckCircle2,
   XCircle,
   Eye,
+  Pencil,
   Trash2,
 } from 'lucide-react';
 
 interface SimuladoCardProps {
   simulado: Simulado;
   onDelete: (id: string) => void;
+  // Prop opcional para editar o gabarito do simulado
+  onUpdated?: (atualizado: Simulado) => void;
 }
 
-export function SimuladoCard({ simulado, onDelete }: SimuladoCardProps) {
+export function SimuladoCard({ simulado, onDelete, onUpdated }: SimuladoCardProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+
+  const handleGabaritoSaved = (
+    atualizado: Simulado,
+    relatorio: RelatorioCorrecao,
+  ) => {
+    onUpdated?.(atualizado);
+    // Reabre o relatório já recalculado logo após a edição
+    setIsModalOpen(true);
+  };
 
   const dataFormatada = new Date(simulado.dataRealizacao).toLocaleDateString(
     'pt-BR',
@@ -40,17 +54,26 @@ export function SimuladoCard({ simulado, onDelete }: SimuladoCardProps) {
               {simulado.nome}
             </h3>
           </div>
-          <button
-            onClick={() => {
-              if (confirm(`Deseja excluir o simulado "${simulado.nome}"?`)) {
-                onDelete(simulado.id);
-              }
-            }}
-            className="text-slate-400 hover:text-red-500 p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors"
-            title="Excluir Simulado"
-          >
-            <Trash2 size={16} />
-          </button>
+          <div className="flex items-start gap-1">
+            <button
+              onClick={() => setIsEditOpen(true)}
+              className="text-slate-400 hover:text-indigo-500 p-1.5 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-950/20 transition-colors"
+              title="Editar Gabarito (adicionar/editar/remover questões)"
+            >
+              <Pencil size={16} />
+            </button>
+            <button
+              onClick={() => {
+                if (confirm(`Deseja excluir o simulado "${simulado.nome}"?`)) {
+                  onDelete(simulado.id);
+                }
+              }}
+              className="text-slate-400 hover:text-red-500 p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors"
+              title="Excluir Simulado"
+            >
+              <Trash2 size={16} />
+            </button>
+          </div>
         </div>
 
         <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mb-4">
@@ -111,8 +134,20 @@ export function SimuladoCard({ simulado, onDelete }: SimuladoCardProps) {
           onClose={() => setIsModalOpen(false)}
           nomeSimulado={simulado.nome}
           relatorio={simulado.detalhes}
+          onEditGabarito={() => {
+            setIsModalOpen(false);
+            setIsEditOpen(true);
+          }}
         />
       )}
+
+      {/* Modal de Edição Manual do Gabarito */}
+      <EditarGabaritoModal
+        isOpen={isEditOpen}
+        simClose={() => setIsEditOpen(false)}
+        simulado={simulado}
+        onSaved={handleGabaritoSaved}
+      />
     </>
   );
 }

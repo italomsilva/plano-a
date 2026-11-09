@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { Modal } from '../ui/Modal';
 import { Input } from '../ui/Input';
 import { Button } from '../ui/Button';
-import { api } from '../../services/api';
+import { api, getApiErrorMessage } from '../../services/api';
 import confetti from 'canvas-confetti';
 import {
   Upload,
@@ -13,6 +13,8 @@ import {
   CheckCircle2,
   AlertCircle,
   Eye,
+  Plus,
+  Trash2,
 } from 'lucide-react';
 import { RelatorioCorrecao } from '../../types';
 
@@ -40,6 +42,14 @@ export function SimuladoModal({
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [ocrProvider, setOcrProvider] = useState<string>('');
   const [manualGabaritoText, setManualGabaritoText] = useState('');
+
+  // Questões Manuais para adição/edição no gabarito oficial
+  interface ManualQuestion {
+    id: string;
+    numero: number;
+    alternativa: string;
+  }
+  const [manualQuestions, setManualQuestions] = useState<ManualQuestion[]>([]);
 
   // Gabarito do Aluno
   const [gabaritoAluno, setGabaritoAluno] = useState('');
@@ -71,10 +81,12 @@ export function SimuladoModal({
             'Não foi possível extrair respostas claras da imagem. Digite abaixo ou envie outra foto mais nítida.',
         );
       }
-    } catch (err: any) {
+    } catch (err) {
       setError(
-        err.response?.data?.message ||
+        getApiErrorMessage(
+          err,
           'Falha no processamento da imagem do gabarito. Tente novamente.',
+        ),
       );
     } finally {
       setIsUploadingImage(false);
@@ -110,7 +122,7 @@ export function SimuladoModal({
       return;
     }
 
-    if (Object.keys(gabaritoOficialMap).length === 0) {
+    if (Object.keys(gabaritoOficialMap).length + manualQuestions.length === 0) {
       setError(
         'Forneça o gabarito oficial através de upload de imagem ou preenchimento manual.',
       );
@@ -122,14 +134,49 @@ export function SimuladoModal({
       return;
     }
 
+    // Validar questões manuais antes de enviar
+    for (const q of manualQuestions) {
+      if (!q.numero || q.numero <= 0) {
+        setError('Números de questão inválidos. Use apenas números positivos inteiros.');
+        return;
+      }
+      if (!/^[A-EX]$/i.test(q.alternativa.trim())) {
+        setError(`Alternativa inválida na questão ${q.numero}. Use apenas: A, B, C, D, E ou X (anulada).`);
+        return;
+      }
+    }
+
+    const questaoNumbers = new Set<number>();
+    for (const q of [...manualQuestions]) {
+      if (questaoNumbers.has(q.numero)) {
+        setError(`Questão ${q.numero} duplicada. Informe cada questão apenas uma vez.`);
+        return;
+      }
+      questaoNumbers.add(q.numero);
+    }
+
     try {
       setLoading(true);
+
+      // Construir gabarito oficial final combinando OCR + questões manuais
+      // As questões manuais sobrescrevem ou adicionam ao que foi extraído via IA
+      const gabaritoOficialMerged: Record<string, string> = { ...gabaritoOficialMap };
+      for (const q of manualQuestions) {
+        if (q.numero && q.alternativa.trim()) {
+          gabaritoOficialMerged[q.numero.toString()] = q.alternativa.toUpperCase();
+        }
+      }
+
+      // Envia o mapa completo mesclado (OCR + manuais); questões manuais não
+      // descartam as extraídas por IA, pois o backend aceita objeto ou array.
+      const gabaritoOficialFinal = gabaritoOficialMerged;
+
       const res = await api.post('/simulados', {
         concursoId,
         nome: nome.trim(),
         ano: Number(ano),
         dataRealizacao: new Date(dataRealizacao).toISOString(),
-        gabaritoOficial: gabaritoOficialMap,
+        gabaritoOficial: gabaritoOficialFinal,
         gabaritoAluno,
       });
 
@@ -145,17 +192,20 @@ export function SimuladoModal({
 
       onClose();
       onSuccess(relatorio, nome);
-    } catch (err: any) {
+    } catch (err) {
+      // Alerta claro na UI caso a API falhe ao salvar a correção
       setError(
-        err.response?.data?.message ||
+        getApiErrorMessage(
+          err,
           'Falha ao processar e salvar simulado. Tente novamente.',
+        ),
       );
     } finally {
       setLoading(false);
     }
   };
 
-  const totalQuestoesDetectadas = Object.keys(gabaritoOficialMap).length;
+  const totalQuestoesDetectadas = Object.keys(gabaritoOficialMap).length + manualQuestions.length;
 
   return (
     <Modal
@@ -252,6 +302,68 @@ export function SimuladoModal({
               </div>
             )}
           </div>
+
+          {/* Perguntas Manuais - Adicionar/Editar Questões */}
+          <div className="space-y-3">
+            {manualQuestions.map((q, index) => (
+              <div key={q.id} className="flex items-center gap-2 p-2.5 bg-slate-100 dark:bg-slate-900/50 border border-slate-300 dark:border-slate-700 rounded-xl">
+                <span className="text-sm font-bold text-slate-500 dark:text-slate-400 w-8 text-center">Q</span>
+                <div className="flex-1">
+                  <input
+                    type="number"
+                    value={q.numero}
+                    onChange={(e) => setManualQuestions((prev) => 
+                      prev.map((item, i) => 
+                        i === index ? { ...item, numero: Number(e.target.value) } : item
+                      )
+                    )}
+                    className="border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded"
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <select
+                    value={q.alternativa}
+                    onChange={(e) => setManualQuestions((prev) => 
+                      prev.map((item, i) => 
+                        i === index ? { ...item, alternativa: e.target.value } : item
+                      )
+                    )}
+                    className="px-2 py-0.5 rounded bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-bold h-9"
+                  >
+                    <option value="" disabled>
+                      Alternativa da questão
+                    </option>
+                    <option value="A">A</option>
+                    <option value="B">B</option>
+                    <option value="C">C</option>
+                    <option value="D">D</option>
+                    <option value="E">E</option>
+                    <option value="X">X (Anulada)</option>
+                  </select>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setManualQuestions((prev) => prev.filter((_, i) => i !== index))
+                    }
+                    disabled={isUploadingImage || loading}
+                    className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-lg transition-colors"
+                    title="Remover questão"
+                  >
+                    <Trash2 size={15} />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setManualQuestions([...manualQuestions, { id: Date.now().toString(), numero: manualQuestions.length + 1, alternativa: '' }])}
+            className="px-2.5 py-1 text-xs bg-slate-800 dark:bg-indigo-600 text-white rounded-lg font-medium hover:bg-slate-700 flex items-center gap-1"
+          >
+            <Plus size={12} />
+            <span>Adicionar Questão</span>
+          </button>
 
           {/* Fallback ou revisão manual do gabarito oficial */}
           {totalQuestoesDetectadas === 0 && (

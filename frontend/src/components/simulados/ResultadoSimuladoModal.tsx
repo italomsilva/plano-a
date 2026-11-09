@@ -3,13 +3,15 @@
 import React from 'react';
 import { Modal } from '../ui/Modal';
 import { RelatorioCorrecao } from '../../types';
-import { CheckCircle2, XCircle, AlertCircle, Award, Percent } from 'lucide-react';
+import { CheckCircle2, XCircle, AlertCircle, Award, Percent, Pencil } from 'lucide-react';
 
 interface ResultadoSimuladoModalProps {
   isOpen: boolean;
   onClose: () => void;
   nomeSimulado: string;
   relatorio: RelatorioCorrecao;
+  // Callback opcional para abrir a edição manual do gabarito
+  onEditGabarito?: () => void;
 }
 
 export function ResultadoSimuladoModal({
@@ -17,6 +19,7 @@ export function ResultadoSimuladoModal({
   onClose,
   nomeSimulado,
   relatorio,
+  onEditGabarito,
 }: ResultadoSimuladoModalProps) {
   if (!relatorio) return null;
 
@@ -138,6 +141,20 @@ export function ResultadoSimuladoModal({
             ))}
           </div>
         </div>
+
+        {/* Ação: editar gabarito manualmente */}
+        {onEditGabarito && (
+          <div className="flex justify-end pt-3 border-t border-slate-100 dark:border-slate-800">
+            <button
+              type="button"
+              onClick={onEditGabarito}
+              className="inline-flex items-center gap-2 px-3 py-2 text-xs font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/40 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 rounded-xl border border-indigo-200 dark:border-indigo-800 transition-colors"
+            >
+              <Pencil size={14} />
+              <span>Editar Gabarito (adicionar/editar/remover questões)</span>
+            </button>
+          </div>
+        )}
       </div>
     </Modal>
   );

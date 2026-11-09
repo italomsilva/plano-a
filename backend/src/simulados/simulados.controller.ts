@@ -5,12 +5,14 @@ import {
   Get,
   Param,
   Post,
+  Put,
   Query,
   UseGuards,
 } from '@nestjs/common';
 import { SimuladosService } from './simulados.service';
 import { CreateSimuladoDto } from './dto/create-simulado.dto';
 import { CorrigirSimuladoDto } from './dto/corrigir-simulado.dto';
+import { UpdateGabaritoDto } from './dto/update-gabarito.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { GetUser, AuthenticatedUser } from '../auth/get-user.decorator';
 
@@ -43,6 +45,19 @@ export class SimuladosController {
   @Post('preview-correcao')
   async previewCorrecao(@Body() dto: CorrigirSimuladoDto) {
     return this.simuladosService.previewCorrecao(dto);
+  }
+
+  /**
+   * Atualiza o gabarito oficial de um simulado existente
+   * (adicionar, editar ou remover questões) e recalcula a correção.
+   */
+  @Put(':id/gabarito')
+  async updateGabarito(
+    @Param('id') id: string,
+    @Body() dto: UpdateGabaritoDto,
+    @GetUser() user: AuthenticatedUser,
+  ) {
+    return this.simuladosService.updateGabarito(id, dto, user.id);
   }
 
   @Delete(':id')

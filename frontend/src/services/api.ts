@@ -35,3 +35,24 @@ api.interceptors.response.use(
   },
 );
 
+/**
+ * Extrai uma mensagem de erro legível da resposta da API.
+ * O ValidationPipe do NestJS devolve `message` como string OU como array
+ * de mensagens de validação; também cobre falhas de rede/timeout.
+ */
+export function getApiErrorMessage(err: unknown, fallback: string): string {
+  const anyErr = err as any;
+
+  if (anyErr?.response?.data) {
+    const data = anyErr.response.data;
+    if (typeof data.message === 'string') return data.message;
+    if (Array.isArray(data.message)) return data.message.join('; ');
+  }
+
+  if (anyErr?.code === 'ECONNABORTED' || anyErr?.message === 'Network Error') {
+    return 'Não foi possível conectar ao servidor. Verifique sua conexão e tente novamente.';
+  }
+
+  return fallback;
+}
+

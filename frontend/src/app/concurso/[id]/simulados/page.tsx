@@ -80,6 +80,14 @@ export default function SimuladosPage() {
     });
   };
 
+  // Atualiza o simulado na lista após edição manual do gabarito
+  const handleSimuladoUpdated = (atualizado: Simulado) => {
+    setSimulados((prev) =>
+      prev.map((s) => (s.id === atualizado.id ? atualizado : s)),
+    );
+    atualizarConcursoAtual().catch(() => {});
+  };
+
   // Calcular estatísticas gerais
   const total = simulados.length;
   const mediaAproveitamento =
@@ -154,6 +162,7 @@ export default function SimuladosPage() {
               key={simulado.id}
               simulado={simulado}
               onDelete={handleDeleteSimulado}
+              onUpdated={handleSimuladoUpdated}
             />
           ))}
         </div>
